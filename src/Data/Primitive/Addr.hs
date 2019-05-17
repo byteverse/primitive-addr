@@ -90,10 +90,11 @@ writeOffAddr (Addr addr#) (I# i#) x = primitive_ (writeOffAddr# addr# i# x)
 
 -- | Copy the given number of bytes from the second 'Addr' to the first. The
 -- areas may not overlap.
-copyAddr :: PrimMonad m => Addr         -- ^ destination address
-                        -> Addr         -- ^ source address
-                        -> Int          -- ^ number of bytes
-                        -> m ()
+copyAddr :: PrimMonad m
+  => Addr -- ^ destination address
+  -> Addr -- ^ source address
+  -> Int -- ^ number of bytes
+  -> m ()
 {-# INLINE copyAddr #-}
 copyAddr (Addr dst#) (Addr src#) n
   = unsafePrimToPrim $ copyBytes (Ptr dst#) (Ptr src#) n
@@ -101,8 +102,6 @@ copyAddr (Addr dst#) (Addr src#) n
 -- | Copy the given number of bytes from the 'Addr' to the 'MutableByteArray'.
 --   The areas may not overlap. This function is only available when compiling
 --   with GHC 7.8 or newer.
---   
---   @since 0.6.4.0
 copyAddrToByteArray :: PrimMonad m
   => MutableByteArray (PrimState m) -- ^ destination
   -> Int -- ^ offset into the destination array
