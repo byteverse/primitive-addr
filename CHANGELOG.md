@@ -1,5 +1,9 @@
 # Revision history for primitive-addr
 
-## 0.1.0.0 -- YYYY-mm-dd
+## 0.1.0.1 -- 2019-06-18
+
+* Allow building with GHCs as old as 7.4.2.
+
+## 0.1.0.0 -- 2019-05-17
 
 * First version. Released on an unsuspecting world.

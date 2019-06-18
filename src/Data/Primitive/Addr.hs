@@ -1,3 +1,4 @@
+{-# language CPP #-}
 {-# language MagicHash #-}
 {-# language UnboxedTuples #-}
 
@@ -16,7 +17,9 @@ module Data.Primitive.Addr
   , writeOffAddr
   -- * Block operations
   , copyAddr
+#if __GLASGOW_HASKELL__ >= 708
   , copyAddrToByteArray
+#endif
   , moveAddr
   , setAddr
   -- * Conversion
@@ -32,6 +35,14 @@ import GHC.Exts
 import GHC.Ptr
 import Foreign.Marshal.Utils
 
+#if __GLASGOW_HASKELL__ < 708
+toBool# :: Bool -> Bool
+toBool# = id
+#else
+toBool# :: Int# -> Bool
+toBool# = isTrue#
+#endif
+
 -- | A machine address
 data Addr = Addr Addr#
 
@@ -40,14 +51,14 @@ instance Show Addr where
     showString "0x" . showHex (fromIntegral (I# (addr2Int# a)) :: Word)
 
 instance Eq Addr where
-  Addr a# == Addr b# = isTrue# (eqAddr# a# b#)
-  Addr a# /= Addr b# = isTrue# (neAddr# a# b#)
+  Addr a# == Addr b# = toBool# (eqAddr# a# b#)
+  Addr a# /= Addr b# = toBool# (neAddr# a# b#)
 
 instance Ord Addr where
-  Addr a# > Addr b# = isTrue# (gtAddr# a# b#)
-  Addr a# >= Addr b# = isTrue# (geAddr# a# b#)
-  Addr a# < Addr b# = isTrue# (ltAddr# a# b#)
-  Addr a# <= Addr b# = isTrue# (leAddr# a# b#)
+  Addr a# > Addr b# = toBool# (gtAddr# a# b#)
+  Addr a# >= Addr b# = toBool# (geAddr# a# b#)
+  Addr a# < Addr b# = toBool# (ltAddr# a# b#)
+  Addr a# <= Addr b# = toBool# (leAddr# a# b#)
 
 -- | The null address
 nullAddr :: Addr
@@ -99,6 +110,7 @@ copyAddr :: PrimMonad m
 copyAddr (Addr dst#) (Addr src#) n
   = unsafePrimToPrim $ copyBytes (Ptr dst#) (Ptr src#) n
 
+#if __GLASGOW_HASKELL__ >= 708
 -- | Copy the given number of bytes from the 'Addr' to the 'MutableByteArray'.
 --   The areas may not overlap. This function is only available when compiling
 --   with GHC 7.8 or newer.
@@ -111,13 +123,15 @@ copyAddrToByteArray :: PrimMonad m
 {-# INLINE copyAddrToByteArray #-}
 copyAddrToByteArray (MutableByteArray marr) (I# off) (Addr addr) (I# len) =
   primitive_ $ copyAddrToByteArray# addr marr off len
+#endif
 
 -- | Copy the given number of bytes from the second 'Addr' to the first. The
 -- areas may overlap.
-moveAddr :: PrimMonad m => Addr         -- ^ destination address
-                        -> Addr         -- ^ source address
-                        -> Int          -- ^ number of bytes
-                        -> m ()
+moveAddr :: PrimMonad m
+  => Addr -- ^ destination address
+  -> Addr -- ^ source address
+  -> Int -- ^ number of bytes
+  -> m ()
 {-# INLINE moveAddr #-}
 moveAddr (Addr dst#) (Addr src#) n
   = unsafePrimToPrim $ moveBytes (Ptr dst#) (Ptr src#) n
