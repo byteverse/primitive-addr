@@ -28,7 +28,7 @@ module Data.Primitive.Addr
 
 import Numeric (showHex)
 import Control.Monad.Primitive
-import Data.Primitive.Types
+import Data.Primitive.Types (Prim(..))
 import Data.Primitive.ByteArray
 
 import GHC.Exts
