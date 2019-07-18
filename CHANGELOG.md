@@ -1,6 +1,6 @@
 # Revision history for primitive-addr
 
-## 0.1.0.2 -- 2019-06-18
+## 0.1.0.2 -- 2019-07-18
 
 * Allow building with `primitive-0.6.4.0`.
 
