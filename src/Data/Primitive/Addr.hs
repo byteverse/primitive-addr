@@ -1,7 +1,8 @@
-{-# language CPP #-}
-{-# language MagicHash #-}
-{-# language UnboxedTuples #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE UnboxedTuples #-}
 
+{- FOURMOLU_DISABLE -}
 -- | Primitive operations on machine addresses.
 module Data.Primitive.Addr
   ( -- * Types
@@ -25,15 +26,15 @@ module Data.Primitive.Addr
   -- * Conversion
   , addrToInt
 ) where
+{- FOURMOLU_ENABLE -}
 
-import Numeric (showHex)
 import Control.Monad.Primitive
-import Data.Primitive.Types (Prim(..))
 import Data.Primitive.ByteArray
+import Data.Primitive.Types (Prim (..))
+import Numeric (showHex)
 
-import GHC.Exts
-import GHC.Ptr
 import Foreign.Marshal.Utils
+import GHC.Exts
 
 #if __GLASGOW_HASKELL__ < 708
 toBool# :: Bool -> Bool
@@ -71,8 +72,9 @@ infixl 7 `remAddr`
 plusAddr :: Addr -> Int -> Addr
 plusAddr (Addr a#) (I# i#) = Addr (plusAddr# a# i#)
 
--- | Distance in bytes between two addresses. The result is only valid if the
--- difference fits in an 'Int'.
+{- | Distance in bytes between two addresses. The result is only valid if the
+difference fits in an 'Int'.
+-}
 minusAddr :: Addr -> Addr -> Int
 minusAddr (Addr a#) (Addr b#) = I# (minusAddr# a# b#)
 
@@ -80,35 +82,43 @@ minusAddr (Addr a#) (Addr b#) = I# (minusAddr# a# b#)
 remAddr :: Addr -> Int -> Int
 remAddr (Addr a#) (I# i#) = I# (remAddr# a# i#)
 
--- | Read a value from a memory position given by an address and an offset.
--- The memory block the address refers to must be immutable. The offset is in
--- elements of type @a@ rather than in bytes.
-indexOffAddr :: Prim a => Addr -> Int -> a
+{- | Read a value from a memory position given by an address and an offset.
+The memory block the address refers to must be immutable. The offset is in
+elements of type @a@ rather than in bytes.
+-}
+indexOffAddr :: (Prim a) => Addr -> Int -> a
 {-# INLINE indexOffAddr #-}
 indexOffAddr (Addr addr#) (I# i#) = indexOffAddr# addr# i#
 
--- | Read a value from a memory position given by an address and an offset.
--- The offset is in elements of type @a@ rather than in bytes.
+{- | Read a value from a memory position given by an address and an offset.
+The offset is in elements of type @a@ rather than in bytes.
+-}
 readOffAddr :: (Prim a, PrimMonad m) => Addr -> Int -> m a
 {-# INLINE readOffAddr #-}
 readOffAddr (Addr addr#) (I# i#) = primitive (readOffAddr# addr# i#)
 
--- | Write a value to a memory position given by an address and an offset.
--- The offset is in elements of type @a@ rather than in bytes.
+{- | Write a value to a memory position given by an address and an offset.
+The offset is in elements of type @a@ rather than in bytes.
+-}
 writeOffAddr :: (Prim a, PrimMonad m) => Addr -> Int -> a -> m ()
 {-# INLINE writeOffAddr #-}
 writeOffAddr (Addr addr#) (I# i#) x = primitive_ (writeOffAddr# addr# i# x)
 
--- | Copy the given number of bytes from the second 'Addr' to the first. The
--- areas may not overlap.
-copyAddr :: PrimMonad m
-  => Addr -- ^ destination address
-  -> Addr -- ^ source address
-  -> Int -- ^ number of bytes
-  -> m ()
+{- | Copy the given number of bytes from the second 'Addr' to the first. The
+areas may not overlap.
+-}
+copyAddr ::
+  (PrimMonad m) =>
+  -- | destination address
+  Addr ->
+  -- | source address
+  Addr ->
+  -- | number of bytes
+  Int ->
+  m ()
 {-# INLINE copyAddr #-}
-copyAddr (Addr dst#) (Addr src#) n
-  = unsafePrimToPrim $ copyBytes (Ptr dst#) (Ptr src#) n
+copyAddr (Addr dst#) (Addr src#) n =
+  unsafePrimToPrim $ copyBytes (Ptr dst#) (Ptr src#) n
 
 #if __GLASGOW_HASKELL__ >= 708
 -- | Copy the given number of bytes from the 'Addr' to the 'MutableByteArray'.
@@ -125,19 +135,25 @@ copyAddrToByteArray (MutableByteArray marr) (I# off) (Addr addr) (I# len) =
   primitive_ $ copyAddrToByteArray# addr marr off len
 #endif
 
--- | Copy the given number of bytes from the second 'Addr' to the first. The
--- areas may overlap.
-moveAddr :: PrimMonad m
-  => Addr -- ^ destination address
-  -> Addr -- ^ source address
-  -> Int -- ^ number of bytes
-  -> m ()
+{- | Copy the given number of bytes from the second 'Addr' to the first. The
+areas may overlap.
+-}
+moveAddr ::
+  (PrimMonad m) =>
+  -- | destination address
+  Addr ->
+  -- | source address
+  Addr ->
+  -- | number of bytes
+  Int ->
+  m ()
 {-# INLINE moveAddr #-}
-moveAddr (Addr dst#) (Addr src#) n
-  = unsafePrimToPrim $ moveBytes (Ptr dst#) (Ptr src#) n
+moveAddr (Addr dst#) (Addr src#) n =
+  unsafePrimToPrim $ moveBytes (Ptr dst#) (Ptr src#) n
 
--- | Fill a memory block of with the given value. The length is in
--- elements of type @a@ rather than in bytes.
+{- | Fill a memory block of with the given value. The length is in
+elements of type @a@ rather than in bytes.
+-}
 setAddr :: (Prim a, PrimMonad m) => Addr -> Int -> a -> m ()
 {-# INLINE setAddr #-}
 setAddr (Addr addr#) (I# n#) x = primitive_ (setOffAddr# addr# 0# n# x)
@@ -146,4 +162,3 @@ setAddr (Addr addr#) (I# n#) x = primitive_ (setOffAddr# addr# 0# n# x)
 addrToInt :: Addr -> Int
 {-# INLINE addrToInt #-}
 addrToInt (Addr addr#) = I# (addr2Int# addr#)
-
